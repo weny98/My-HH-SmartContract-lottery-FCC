@@ -1,6 +1,6 @@
 const { frontEndContractsFile, frontEndAbiFile } = require("../helper-hardhat-config")
 const fs = require("fs")
-const { network } = require("hardhat")
+const { network, ethers } = require("hardhat")
 
 module.exports = async () => {
     if (process.env.UPDATE_FRONT_END) {
@@ -13,18 +13,18 @@ module.exports = async () => {
 
 async function updateAbi() {
     const raffle = await ethers.getContract("Raffle")
-    fs.writeFileSync(frontEndAbiFile, raffle.interface.format(ethers.utils.FormatTypes.json))
+    fs.writeFileSync(frontEndAbiFile, raffle.interface.formatJson())
 }
 
 async function updateContractAddresses() {
     const raffle = await ethers.getContract("Raffle")
     const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
     if (network.config.chainId.toString() in contractAddresses) {
-        if (!contractAddresses[network.config.chainId.toString()].includes(raffle.address)) {
-            contractAddresses[network.config.chainId.toString()] = raffle.address
+        if (!contractAddresses[network.config.chainId.toString()].includes(raffle.target)) {
+            contractAddresses[network.config.chainId.toString()] = raffle.target
         }
     } else {
-        contractAddresses[network.config.chainId.toString()] = [raffle.address]
+        contractAddresses[network.config.chainId.toString()] = [raffle.target]
     }
     fs.writeFileSync(frontEndContractsFile, JSON.stringify(contractAddresses))
 }
